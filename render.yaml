@@ -13,3 +13,14 @@ services:
       name: ucai-data
       mountPath: /var/data
       sizeGB: 10
+
+  - type: static
+    name: ucai-client
+    repo: https://github.com/Matrixxboy/ucai
+    branch: main
+    buildCommand: cd Client && npm install && npm run build
+    staticPublishPath: ./Client/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
