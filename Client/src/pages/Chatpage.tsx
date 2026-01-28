@@ -257,7 +257,13 @@ export default function Chatpage() {
     }
 
     try {
-      const res = await api.chat(updatedMessages, 2048, 0.7, isWebSearchEnabled)
+      const res = await api.chat(
+        updatedMessages,
+        2048,
+        0.7,
+        isWebSearchEnabled,
+        currentSessionId || "default_session",
+      )
 
       if (!res.body) throw new Error("No response body")
 
@@ -469,6 +475,25 @@ export default function Chatpage() {
             </h1>
           </div>
           <div className="flex items-center gap-3">
+            <div className="flex flex-col items-end mr-4">
+              <span className="text-[10px] text-[#57534e] uppercase tracking-widest font-bold">
+                Session ID
+              </span>
+              <span
+                className="text-xs text-[#78716c] font-mono cursor-pointer hover:text-[#d6d3d1]"
+                title="Click to Copy"
+                onClick={() => {
+                  if (currentSessionId) {
+                    navigator.clipboard.writeText(currentSessionId)
+                    alert("Session ID Copied: " + currentSessionId)
+                  }
+                }}
+              >
+                {currentSessionId
+                  ? currentSessionId.slice(0, 8) + "..."
+                  : "Local"}
+              </span>
+            </div>
             <button
               onClick={() => setShowCredits(true)}
               className="px-4 py-2 rounded-full border border-[#292524] text-[#a8a29e] hover:text-[#d6d3d1] hover:bg-[#292524] transition-all text-xs uppercase tracking-widest font-bold"

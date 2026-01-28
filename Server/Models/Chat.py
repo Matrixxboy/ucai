@@ -11,3 +11,4 @@ class ChatRequest(BaseModel):
     max_tokens: Optional[int] = 512
     temperature: Optional[float] = 0.7
     web_search: Optional[bool] = False
+    session_id: Optional[str] = "default_session"

@@ -7,11 +7,18 @@ export const api = {
     max_tokens = 2048,
     temperature = 0.7,
     web_search = false,
+    session_id = "default_session",
   ) => {
     return fetch(`${API_BASE}/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages, max_tokens, temperature, web_search }),
+      body: JSON.stringify({
+        messages,
+        max_tokens,
+        temperature,
+        web_search,
+        session_id,
+      }),
     })
   },
 
@@ -47,6 +54,18 @@ export const api = {
 
   getDownloadStatus: async (taskId: string) => {
     const res = await fetch(`${API_BASE}/models/download/${taskId}`)
+    return res.json()
+  },
+
+  // Memory
+  clearMemory: async (session_id?: string) => {
+    const url = session_id
+      ? `${API_BASE}/memory/clear?session_id=${session_id}`
+      : `${API_BASE}/memory/clear`
+
+    const res = await fetch(url, {
+      method: "DELETE",
+    })
     return res.json()
   },
 

@@ -462,6 +462,26 @@ export default function Settings() {
                 <div className="w-4 h-4 bg-[#e7e5e4] rounded-full absolute top-1 left-1 transition-transform data-[state=on]:translate-x-6 shadow-sm"></div>
               </button>
             </div>
+
+            <div className="mt-6 pt-6 border-t border-[#292524]">
+              <a
+                href="/settings/memory"
+                className="flex items-center justify-between p-4 bg-[#292524]/50 rounded-lg hover:bg-[#292524] transition-colors group"
+              >
+                <div>
+                  <h3 className="text-sm font-medium text-[#d6d3d1] group-hover:text-[#e7e5e4]">
+                    Control Memory Data
+                  </h3>
+                  <p className="text-xs text-[#78716c]">
+                    Manage, clear, or reset AI memory and session history.
+                  </p>
+                </div>
+                <ArrowLeft
+                  size={16}
+                  className="rotate-180 text-[#78716c] group-hover:text-[#d6d3d1] transition-colors"
+                />
+              </a>
+            </div>
           </section>
 
           {/* System Prompt Section */}
