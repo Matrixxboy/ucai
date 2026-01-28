@@ -39,7 +39,7 @@ export default function Settings() {
     system_prompt: "",
     rag_enabled: true,
   })
-  const [status, setStatus] = useState<any>(null)
+
   const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState("")
 
@@ -89,7 +89,6 @@ export default function Settings() {
       .getSettings()
       .then((data: any) => {
         if (data.data) {
-          setStatus(data.data)
           if (data.data.config && Object.keys(data.data.config).length > 0) {
             setSettings((prev) => ({
               ...prev,
@@ -163,7 +162,6 @@ export default function Settings() {
       const data = await api.updateSettings(settings)
       if (data.success) {
         setMsg("Model loaded successfully!")
-        setStatus(data.data)
       } else {
         setMsg(`Error: ${data.message}`)
       }
@@ -282,6 +280,9 @@ export default function Settings() {
                       Refresh
                     </button>
                   </p>
+                  {scanMsg && (
+                    <p className="text-xs text-amber-500 mt-1">{scanMsg}</p>
+                  )}
                 </div>
 
                 {/* Download Model */}

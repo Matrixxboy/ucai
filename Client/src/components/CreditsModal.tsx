@@ -1,4 +1,4 @@
-import { X, Github, Globe, Twitter, Heart } from "lucide-react"
+import { X, Github, Globe, Twitter } from "lucide-react"
 
 interface CreditsModalProps {
   isOpen: boolean

@@ -6,7 +6,6 @@ import {
   Plus,
   Trash2,
   Menu,
-  X,
   Pin,
   PinOff,
   Edit2,
