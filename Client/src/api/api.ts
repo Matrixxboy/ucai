@@ -49,4 +49,16 @@ export const api = {
     const res = await fetch(`${API_BASE}/models/download/${taskId}`)
     return res.json()
   },
+
+  // Health Check
+  checkHealth: async () => {
+    try {
+      const res = await fetch(`${API_BASE}/settings`)
+      // If we get a response (even 401/403), the server is up.
+      // Ideally use a dedicated health endpoint but settings is fine for now ensuring DB connection etc if needed.
+      return res.ok
+    } catch (e) {
+      return false
+    }
+  },
 }

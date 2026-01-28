@@ -1,4 +1,4 @@
-import { ArrowRight, Shield, Zap, Cpu } from "lucide-react"
+import { ArrowRight, Shield, Cpu, Search, Lock } from "lucide-react"
 import { Link } from "react-router-dom"
 
 export default function Home() {
@@ -11,16 +11,16 @@ export default function Home() {
       </div>
 
       {/* Navbar */}
-      <nav className="p-6 flex justify-between items-center relative z-10 max-w-7xl mx-auto w-full">
+      <nav className="p-6 flex justify-between items-center relative z-10 w-[90%] mx-auto w-full">
         <div className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-gradient-to-br from-[#d6d3d1] to-[#57534e] rounded-lg flex items-center justify-center shadow-lg">
-            <span className="text-2xl">⚡</span>
+          <div className="w-10 h-10 bg-gradient-to-br rounded-full from-[#d6d3d1] to-[#57534e] flex items-center justify-center shadow-lg">
+            <img src="logo.png" alt="" className="text-2xl rounded-full" />
           </div>
           <span className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#e7e5e4] to-[#a8a29e]">
             Unified Causal AI
           </span>
         </div>
-        <div className="hidden md:flex gap-8 text-sm font-medium text-[#a8a29e]">
+        {/* <div className="hidden lg:flex gap-8 text-sm font-medium text-[#a8a29e]">
           <a href="#" className="hover:text-[#e7e5e4] transition-colors">
             Features
           </a>
@@ -30,7 +30,7 @@ export default function Home() {
           <a href="#" className="hover:text-[#e7e5e4] transition-colors">
             Models
           </a>
-        </div>
+        </div> */}
         <Link
           to="/chat"
           className="px-5 py-2 rounded-full border border-[#292524] hover:bg-[#1c1917] transition-all text-sm font-semibold tracking-wide"
@@ -47,8 +47,12 @@ export default function Home() {
             Local Inference Ready
           </span>
         </div> */}
-
-        <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-8 leading-tight animate-in fade-in slide-in-from-bottom-6 duration-1000">
+        <img
+          src="logo.png"
+          alt=""
+          className="w-32 h-32 rounded-full shadow-[0_8px_30px_rgba(255,255,255,0.30),0_-8px_30px_rgba(255,255,255,0.30),8px_0_30px_rgba(255,255,255,0.30),-8px_0_30px_rgba(255,255,255,0.30)]"
+        />
+        <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-8 mt-4 leading-tight animate-in fade-in slide-in-from-bottom-6 duration-1000">
           Private AI, <br />
           <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#d6d3d1] via-[#a8a29e] to-[#57534e]">
             Running Locally.
@@ -84,31 +88,46 @@ export default function Home() {
         </div>
 
         {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-24 w-full text-left animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-500">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-24 w-full text-left animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-500">
           <div className="p-6 rounded-2xl bg-[#1c1917]/50 border border-[#292524] backdrop-blur-sm hover:border-[#44403c] transition-colors">
             <div className="w-12 h-12 bg-[#292524] rounded-lg flex items-center justify-center mb-4 text-[#d6d3d1]">
               <Shield size={24} />
             </div>
             <h3 className="text-xl font-bold mb-2 text-[#d6d3d1]">
-              100% Private
+              Local & Secure
             </h3>
             <p className="text-[#78716c] leading-relaxed">
-              Your data never leaves your device. Run sensitive workloads with
-              complete confidence and isolation.
+              Your chat history and data are stored 100% locally on your
+              machine. Nothing is ever sent to our servers.
             </p>
           </div>
+
           <div className="p-6 rounded-2xl bg-[#1c1917]/50 border border-[#292524] backdrop-blur-sm hover:border-[#44403c] transition-colors">
             <div className="w-12 h-12 bg-[#292524] rounded-lg flex items-center justify-center mb-4 text-[#d6d3d1]">
-              <Zap size={24} />
+              <Lock size={24} />
             </div>
             <h3 className="text-xl font-bold mb-2 text-[#d6d3d1]">
-              Lightning Fast
+              Zero Data Leaks
             </h3>
             <p className="text-[#78716c] leading-relaxed">
-              Optimized for local hardware using llama.cpp. Experience
-              low-latency inference without network lag.
+              We don't track you. No telemetry, no logs, and no hidden data
+              collection. Your privacy is our priority.
             </p>
           </div>
+
+          <div className="p-6 rounded-2xl bg-[#1c1917]/50 border border-[#292524] backdrop-blur-sm hover:border-[#44403c] transition-colors">
+            <div className="w-12 h-12 bg-[#292524] rounded-lg flex items-center justify-center mb-4 text-[#d6d3d1]">
+              <Search size={24} />
+            </div>
+            <h3 className="text-xl font-bold mb-2 text-[#d6d3d1]">
+              Private Web Search
+            </h3>
+            <p className="text-[#78716c] leading-relaxed">
+              Integrated with DuckDuckGo for anonymous web searches. Access the
+              internet without being tracked.
+            </p>
+          </div>
+
           <div className="p-6 rounded-2xl bg-[#1c1917]/50 border border-[#292524] backdrop-blur-sm hover:border-[#44403c] transition-colors">
             <div className="w-12 h-12 bg-[#292524] rounded-lg flex items-center justify-center mb-4 text-[#d6d3d1]">
               <Cpu size={24} />

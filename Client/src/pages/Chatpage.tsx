@@ -15,6 +15,7 @@ import {
 } from "lucide-react"
 import { api } from "../api/api"
 import CreditsModal from "../components/CreditsModal"
+import ServerLoading from "../components/ServerLoading"
 
 interface Message {
   role: "user" | "assistant"
@@ -64,6 +65,22 @@ export default function Chatpage() {
       return b.timestamp - a.timestamp
     })
   }
+
+  const [isServerReady, setIsServerReady] = useState(false)
+
+  // Health Check Effect
+  useEffect(() => {
+    const checkServer = async () => {
+      const isUp = await api.checkHealth()
+      if (isUp) {
+        setIsServerReady(true)
+      } else {
+        // Retry after 2 seconds
+        setTimeout(checkServer, 2000)
+      }
+    }
+    checkServer()
+  }, [])
 
   // Load sessions on mount
   useEffect(() => {
@@ -303,6 +320,8 @@ export default function Chatpage() {
         ></div>
       )}
 
+      {!isServerReady && <ServerLoading />}
+
       {/* Sidebar */}
       <div
         className={`fixed inset-y-0 left-0 z-30 w-72 bg-[#0c0a09] border-r border-[#292524] transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
@@ -418,17 +437,17 @@ export default function Chatpage() {
         </div>
 
         {/* Sidebar Footer */}
-        <div className="p-4 border-t border-[#292524]">
+        {/* <div className="p-4 border-t border-[#292524]">
           <div className="text-center">
             <p className="text-[10px] text-[#57534e] uppercase tracking-widest">
               v1.0.0 Local
             </p>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col h-full w-full relative">
+      <div className="flex-1 bg-gradient-to-t from-[#0c0a09] to-transparent flex flex-col h-full w-full relative">
         {/* Subtle Background Gradient */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#1c1917] via-[#1c1917] to-[#0c0a09] pointer-events-none -z-10"></div>
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#292524]/20 via-transparent to-transparent pointer-events-none -z-10"></div>
@@ -526,7 +545,7 @@ export default function Chatpage() {
         </div>
 
         {/* Input */}
-        <div className="p-4 md:p-6 bg-gradient-to-t from-[#0c0a09] to-transparent z-10 w-full max-w-4xl mx-auto">
+        <div className="p-4 md:p-6  z-10 w-full max-w-4xl mx-auto">
           <div className="relative bg-[#1c1917]/80 backdrop-blur-xl border border-[#292524] rounded-2xl shadow-2xl flex items-end gap-2 p-2 transition-all focus-within:border-[#44403c] focus-within:ring-1 focus-within:ring-[#292524]">
             {/* Web Search Toggle */}
             <button
@@ -588,11 +607,9 @@ export default function Chatpage() {
           </div>
           <div className="text-center mt-3">
             <p className="text-[10px] text-[#57534e] font-medium tracking-widest uppercase">
-              {isWebSearchEnabled
-                ? "Searching the internet • "
-                : "Local Inference • "}{" "}
-              Private & Secure
+              {isWebSearchEnabled ? " " : "Local Inference • "} Private & Secure
             </p>
+            Searching the internet •
           </div>
         </div>
       </div>
