@@ -1,0 +1,10 @@
+venv
+
+.env
+node_modules
+
+.vscode
+
+Qwen2.5-7B-Instruct-Uncensored_Q4_K_M.gguf
+
+Server\Models\Qwen2.5-7B-Instruct-Uncensored_Q4_K_M.gguf
