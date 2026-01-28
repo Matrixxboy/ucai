@@ -17,7 +17,7 @@ export default function Home() {
             <span className="text-2xl">⚡</span>
           </div>
           <span className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#e7e5e4] to-[#a8a29e]">
-            UCAI
+            Unified Causal AI
           </span>
         </div>
         <div className="hidden md:flex gap-8 text-sm font-medium text-[#a8a29e]">
@@ -127,7 +127,12 @@ export default function Home() {
         <footer className="mt-20 py-8 border-t border-[#292524] w-full text-center text-[#57534e] text-sm">
           <p>
             &copy; 2024 UCAI. Built by{" "}
-            <span className="text-[#a8a29e] font-medium"><a href="https://github.com/Matrixxboy" target="_blank">Matrixxboy</a></span>.
+            <span className="text-[#a8a29e] font-medium">
+              <a href="https://github.com/Matrixxboy" target="_blank">
+                Matrixxboy
+              </a>
+            </span>
+            .
           </p>
         </footer>
       </main>
