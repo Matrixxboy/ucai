@@ -607,9 +607,11 @@ export default function Chatpage() {
           </div>
           <div className="text-center mt-3">
             <p className="text-[10px] text-[#57534e] font-medium tracking-widest uppercase">
-              {isWebSearchEnabled ? " " : "Local Inference • "} Private & Secure
+              {isWebSearchEnabled
+                ? "Searching the internet • "
+                : "Local Inference • "}{" "}
+              Private & Secure
             </p>
-            Searching the internet •
           </div>
         </div>
       </div>

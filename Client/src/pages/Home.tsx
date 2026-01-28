@@ -16,7 +16,7 @@ export default function Home() {
           <div className="w-10 h-10 bg-gradient-to-br rounded-full from-[#d6d3d1] to-[#57534e] flex items-center justify-center shadow-lg">
             <img src="logo.png" alt="" className="text-2xl rounded-full" />
           </div>
-          <span className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#e7e5e4] to-[#a8a29e]">
+          <span className="md:text-2xl lg:text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#e7e5e4] to-[#a8a29e]">
             Unified Causal AI
           </span>
         </div>
@@ -40,7 +40,7 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <main className="flex-1 flex flex-col items-center justify-center px-4 relative z-10 text-center max-w-5xl mx-auto mt-10 md:mt-20">
+      <main className="flex-1 flex flex-col items-center justify-center px-4 relative z-10 text-center mx-auto mt-10 md:mt-20">
         {/* <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1c1917] border border-[#292524] mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
           <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
           <span className="text-xs font-semibold text-[#a8a29e] uppercase tracking-wider">
@@ -88,7 +88,7 @@ export default function Home() {
         </div>
 
         {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-24 w-full text-left animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-500">
+        <div className="grid max-w-7xl mx-auto grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-24 w-full text-left animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-500">
           <div className="p-6 rounded-2xl bg-[#1c1917]/50 border border-[#292524] backdrop-blur-sm hover:border-[#44403c] transition-colors">
             <div className="w-12 h-12 bg-[#292524] rounded-lg flex items-center justify-center mb-4 text-[#d6d3d1]">
               <Shield size={24} />

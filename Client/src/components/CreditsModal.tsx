@@ -1,95 +1,122 @@
-import { X, Github, Globe, Twitter } from "lucide-react"
+import { useEffect, useState } from "react"
+import { BsTwitterX } from "react-icons/bs"
+import { SiRender, SiGithub , } from "react-icons/si"
+import { X, Globe, Loader2 } from "lucide-react"
 
 interface CreditsModalProps {
   isOpen: boolean
   onClose: () => void
 }
 
+interface GitHubProfile {
+  avatar_url: string
+  name: string
+  bio: string
+}
+
 export default function CreditsModal({ isOpen, onClose }: CreditsModalProps) {
+  const [profile, setProfile] = useState<GitHubProfile | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    setLoading(true)
+    fetch("https://api.github.com/users/Matrixxboy")
+      .then((res) => res.json())
+      .then((data) => {
+        setProfile(data)
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
+  }, [isOpen])
+
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm transition-opacity duration-300">
-      <div className="relative w-full max-w-md p-1 bg-gradient-to-br from-[#d6d3d1] to-[#44403c] rounded-lg shadow-2xl transform transition-transform duration-300 scale-100">
-        <div className="bg-[#1c1917] rounded-lg p-8 relative overflow-hidden">
-          {/* Close Button */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md animate-fadeIn">
+      <div
+        className="relative w-full max-w-md p-[1px]
+        bg-gradient-to-br from-[#a8a29e] to-[#44403c]
+        rounded-xl shadow-[0_0_40px_rgba(214,211,209,0.25)]
+        animate-scaleIn"
+      >
+        <div className="bg-[#1c1917] rounded-xl p-8 relative overflow-hidden">
+          {/* Close */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-[#78716c] hover:text-[#d6d3d1] transition-colors"
+            className="absolute top-4 right-4 text-[#78716c] hover:text-[#e7e5e4] transition"
           >
-            <X size={24} />
+            <X size={22} />
           </button>
 
-          {/* Background Glow */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-[#d6d3d1]/10 rounded-full blur-3xl -z-10"></div>
+          {/* Glow */}
+          <div className="absolute inset-x-0 top-0 mx-auto w-40 h-40 bg-[#d6d3d1]/10 blur-3xl -z-10" />
 
-          {/* Avatar / Icon */}
+          {/* Avatar */}
           <div className="flex justify-center mb-6">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#a8a29e] to-[#57534e] p-[2px] shadow-lg">
-              <div className="w-full h-full rounded-full bg-[#292524] flex items-center justify-center">
-                <span className="text-[#d6d3d1]">
-                  <Globe size={48} />
-                </span>
+            <div
+              className="w-24 h-24 rounded-full p-[2px]
+              bg-gradient-to-br from-[#e7e5e4] to-[#57534e]
+              shadow-[0_0_30px_rgba(214,211,209,0.4)]"
+            >
+              <div
+                className="w-full h-full rounded-full bg-[#292524]
+                flex items-center justify-center overflow-hidden"
+              >
+                {loading ? (
+                  <Loader2 className="animate-spin text-[#a8a29e]" />
+                ) : (
+                  <img
+                    src={profile?.avatar_url}
+                    alt="GitHub Avatar"
+                    className="w-full h-full object-cover"
+                  />
+                )}
               </div>
             </div>
           </div>
 
           {/* Content */}
           <div className="text-center space-y-3">
-            <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#e7e5e4] to-[#a8a29e]">
-              Matrixxboy
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-[#fafaf9] to-[#a8a29e] bg-clip-text text-transparent">
+              {profile?.name || "Matrixxboy"}
             </h2>
-            <p className="text-[#a8a29e] text-sm font-medium tracking-wider uppercase">
+
+            <p className="text-xs tracking-widest uppercase text-[#a8a29e]">
               Lead Developer & Creator
             </p>
-            <p className="text-[#78716c] text-sm leading-relaxed px-4">
-              Building advanced AI experiences with a focus on local privacy and
-              aesthetic design.
+
+            <p className="text-sm text-[#78716c] px-4 leading-relaxed">
+              {profile?.bio ||
+                "Building advanced AI systems with privacy-first and dark aesthetic design."}
             </p>
           </div>
 
-          {/* Social Links */}
+          {/* Links */}
           <div className="flex justify-center gap-6 mt-8">
             <a
               href="https://github.com/Matrixxboy"
               target="_blank"
-              rel="noopener noreferrer"
-              className="text-[#78716c] hover:text-[#d6d3d1] hover:scale-110 transition-all duration-300"
-              title="GitHub"
+              className="text-[#78716c] hover:text-white hover:scale-110 transition"
             >
-              <Github size={24} />
+              <SiGithub size={22} />
             </a>
+
             <a
-              href="#"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[#78716c] hover:text-[#38bdf8] hover:scale-110 transition-all duration-300"
-              title="Twitter / X"
+              href="https://x.com/mmatrixxboy"
+              className="text-[#78716c] hover:text-black hover:scale-110 transition"
             >
-              <Twitter size={24} />
+              <BsTwitterX size={22} />
             </a>
+
             <a
-              href="#"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[#78716c] hover:text-[#22c55e] hover:scale-110 transition-all duration-300"
-              title="Website"
+              href="https://utsav-lankapati.onrender.com"
+              className="text-[#78716c] hover:text-blue-500 hover:scale-110 transition"
             >
-              <Globe size={24} />
+              <Globe size={22} />
             </a>
           </div>
-
-          {/* Footer */}
-          {/* <div className="mt-8 pt-6 border-t border-[#292524] text-center">
-            <p className="text-[#57534e] text-xs flex items-center justify-center gap-1">
-              Made with{" "}
-              <Heart
-                size={10}
-                className="text-red-500 fill-red-500 animate-pulse"
-              />{" "}
-              by Matrixxboy
-            </p>
-          </div> */}
         </div>
       </div>
     </div>
