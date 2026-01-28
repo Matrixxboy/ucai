@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { api } from "../api/api.ts"
 
 interface SettingsState {
   model_path: string
@@ -48,10 +49,7 @@ export default function Settings() {
     if (downloadTaskId) {
       interval = setInterval(async () => {
         try {
-          const res = await fetch(
-            `http://localhost:8000/api/models/download/${downloadTaskId}`,
-          )
-          const data = await res.json()
+          const data = await api.getDownloadStatus(downloadTaskId)
           if (data.data) {
             setDownloadStatus(data.data)
             if (
@@ -71,9 +69,9 @@ export default function Settings() {
   }, [downloadTaskId])
 
   const fetchSettings = () => {
-    fetch("http://localhost:8000/api/settings")
-      .then((res) => res.json())
-      .then((data) => {
+    api
+      .getSettings()
+      .then((data: any) => {
         if (data.data) {
           setStatus(data.data)
           if (data.data.config && Object.keys(data.data.config).length > 0) {
@@ -92,13 +90,13 @@ export default function Settings() {
           }
         }
       })
-      .catch((err) => console.error("Failed to fetch settings", err))
+      .catch((err: any) => console.error("Failed to fetch settings", err))
   }
 
   const fetchModels = () => {
-    fetch("http://localhost:8000/api/models")
-      .then((res) => res.json())
-      .then((data) => {
+    api
+      .listModels()
+      .then((data: any) => {
         if (data.success) {
           setAvailableModels(data.data)
         } else {
@@ -140,12 +138,7 @@ export default function Settings() {
     setLoading(true)
     setMsg("")
     try {
-      const res = await fetch("http://localhost:8000/api/settings/update", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(settings),
-      })
-      const data = await res.json()
+      const data = await api.updateSettings(settings)
       if (data.success) {
         setMsg("Model loaded successfully!")
         setStatus(data.data)
@@ -162,12 +155,7 @@ export default function Settings() {
   const handleDownload = async () => {
     if (!downloadRepo || !downloadFile) return
     try {
-      const res = await fetch("http://localhost:8000/api/models/download", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ repo_id: downloadRepo, filename: downloadFile }),
-      })
-      const data = await res.json()
+      const data = await api.downloadModel(downloadRepo, downloadFile)
       if (data.success) {
         setDownloadTaskId(data.data.task_id)
         setDownloadStatus({

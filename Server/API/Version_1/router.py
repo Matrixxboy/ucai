@@ -61,27 +61,33 @@ async def chat(request: ChatRequest):
             print(f"RAG Context Injected: {len(context)} items")
 
         # Convert Pydantic models to dicts for Llama
-        messages = [
-            {
-                {
-                    "role": "assistant", 
-                    "content": m.system_prompt or system_prompt
-                },
-                {"role": m.role, 
-                "content": m.content}
-            } for m in request.messages]
+        # Access system_prompt from global if needed, or from message if the user added it to the model (checked next)
         
-        # Inject System Prompt if not present
-        if messages[0]["role"] != "system":
-            messages.insert(0, {"role": "system", "content": system_prompt})
-        else:
-            messages[0]["content"] += f"\n{system_prompt}" # Append to existing system prompt
+        formatted_messages = []
+        
+        # 1. Inject System Prompt (Global)
+        # We start with the global system prompt
+        formatted_messages.append({"role": "system", "content": system_prompt})
+        
+        # 2. Append User/Assistant Messages
+        for m in request.messages:
+             formatted_messages.append({"role": m.role, "content": m.content})
+
+        # 3. Retrieve Context (RAG) - Optional, we append it to the LAST user message or as a new system message
+        user_message = request.messages[-1].content
+        context = memory_service.search_context(user_message)
+        
+        if context:
+            context_str = "\n".join(context)
+            # We can append this to the system prompt (index 0) or inject it
+            formatted_messages[0]["content"] += f"\n\nRelevant past information:\n{context_str}"
+            print(f"RAG Context Injected: {len(context)} items")
 
         # 2. Generator Wrapper to Capture Response for Memory
         async def response_generator():
             full_response = ""
             stream = llm_service.chat_stream(
-                messages=messages,
+                messages=formatted_messages,
                 max_tokens=request.max_tokens,
                 temperature=request.temperature
             )

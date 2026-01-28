@@ -12,6 +12,7 @@ import {
   Edit2,
   Check,
 } from "lucide-react"
+import { api } from "../api/api"
 
 interface Message {
   role: "user" | "assistant"
@@ -85,20 +86,42 @@ export default function Chatpage() {
   }, [sessions])
 
   const createNewSession = () => {
-    const newSession: ChatSession = {
-      id: Date.now().toString(),
-      name: "New Chat",
-      messages: [],
-      timestamp: Date.now(),
-      pinned: false,
-    }
     setSessions((prev) => {
-      // We put the new session into the list, then sort (it will be below pinned items)
-      return sortSessions([newSession, ...prev])
+      // Check if the most recent session is already an empty "New Chat"
+      // We assume the first item is the most recent (after sorting/pinned)
+      // Actually, we should check if *any* unpinned session is empty and named "New Chat" at the top
+
+      const sorted = sortSessions(prev)
+      if (sorted.length > 0) {
+        const topSession = sorted[0]
+        // If the top session is unpinned, empty, and named "New Chat", reuse it
+        if (
+          !topSession.pinned &&
+          topSession.messages.length === 0 &&
+          topSession.name === "New Chat"
+        ) {
+          setCurrentSessionId(topSession.id)
+          setMessages([])
+          if (window.innerWidth < 768) setIsSidebarOpen(false)
+          return prev // Return original array, no change
+        }
+      }
+
+      const newSession: ChatSession = {
+        id: Date.now().toString(),
+        name: "New Chat",
+        messages: [],
+        timestamp: Date.now(),
+        pinned: false,
+      }
+
+      const newSessions = sortSessions([newSession, ...prev])
+      setCurrentSessionId(newSession.id)
+      setMessages([])
+      if (window.innerWidth < 768) setIsSidebarOpen(false)
+
+      return newSessions
     })
-    setCurrentSessionId(newSession.id)
-    setMessages([])
-    if (window.innerWidth < 768) setIsSidebarOpen(false)
   }
 
   const loadSession = (id: string) => {
@@ -201,15 +224,7 @@ export default function Chatpage() {
     setMessages(placeholderMsgs)
 
     try {
-      const res = await fetch("http://localhost:8000/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: updatedMessages, // rudimentary history
-          max_tokens: 2048,
-          temperature: 0.7,
-        }),
-      })
+      const res = await api.chat(updatedMessages, 2048, 0.7)
 
       if (!res.body) throw new Error("No response body")
 
