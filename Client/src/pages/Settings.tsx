@@ -1,4 +1,16 @@
 import { useState, useEffect } from "react"
+import {
+  ArrowLeft,
+  Cpu,
+  Download,
+  Settings as SettingsIcon,
+  Database,
+  Save,
+  Info,
+  CheckCircle,
+  Loader2,
+  Terminal,
+} from "lucide-react"
 import { api } from "../api/api.ts"
 
 interface SettingsState {
@@ -6,6 +18,8 @@ interface SettingsState {
   n_ctx: number
   n_gpu_layers: number
   verbose: boolean
+  system_prompt: string
+  rag_enabled: boolean
 }
 
 interface DownloadTask {
@@ -22,6 +36,8 @@ export default function Settings() {
     n_ctx: 2048,
     n_gpu_layers: 0,
     verbose: true,
+    system_prompt: "",
+    rag_enabled: true,
   })
   const [status, setStatus] = useState<any>(null)
   const [loading, setLoading] = useState(false)
@@ -78,6 +94,10 @@ export default function Settings() {
             setSettings((prev) => ({
               ...prev,
               ...data.data.config,
+              rag_enabled:
+                data.data.config.rag_enabled !== undefined
+                  ? data.data.config.rag_enabled
+                  : true,
               model_path: data.data.model_path || "",
             }))
             // Check if current path is not in list (roughly)
@@ -107,7 +127,9 @@ export default function Settings() {
   }
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
   ) => {
     const { name, value, type } = e.target as HTMLInputElement
     const checked = (e.target as HTMLInputElement).checked
@@ -176,261 +198,318 @@ export default function Settings() {
   }
 
   return (
-    <div className="p-8 text-[#e7e5e4] max-w-5xl mx-auto min-h-screen bg-[#1c1917] font-sans flex flex-col md:flex-row gap-8">
-      {/* LEFT COLUMN: CONFIGURATION */}
-      <div className="flex-1 space-y-8">
-        <div className="mb-6 border-b border-[#292524] pb-4">
-          <div className="flex justify-between items-center mb-2">
-            <h1 className="text-3xl font-light text-[#d6d3d1] tracking-wider">
-              Configuration
-            </h1>
-            <a
-              href="/chat"
-              className="text-[#a8a29e] hover:text-[#d6d3d1] text-sm uppercase tracking-widest font-bold"
-            >
-              Back to Chat &rarr;
-            </a>
-          </div>
-          <p className="text-[#78716c] text-sm">
-            Manage your local LLM engine parameters.
-          </p>
-        </div>
-
-        {/* Engine Status */}
-        <div className="flex items-center justify-between p-5 bg-[#292524]/50 border border-[#44403c] rounded-sm">
-          <span className="text-[#a8a29e] font-medium tracking-wide">
-            Engine Status
-          </span>
-          <span
-            className={`px-4 py-1.5 rounded-sm text-xs font-bold tracking-widest uppercase ${status?.loaded ? "bg-[#44403c] text-[#d6d3d1] border border-[#57534e]" : "bg-[#292524] text-[#78716c] border border-[#44403c]"}`}
-          >
-            {status?.loaded ? "Active" : "Inactive"}
-          </span>
-        </div>
-
-        {/* Model Selection */}
-        <div className="space-y-3">
-          <label className="block text-xs font-semibold uppercase tracking-widest text-[#78716c]">
-            Select Model
-          </label>
-          <select
-            value={isCustomPath ? "custom" : settings.model_path}
-            onChange={handleModelSelect}
-            className="w-full bg-[#0c0a09] border border-[#292524] rounded-sm px-5 py-4 focus:outline-none focus:border-[#57534e] transition-all text-[#d6d3d1] font-mono text-sm appearance-none"
-          >
-            <option value="" disabled>
-              -- Select a Model --
-            </option>
-            {availableModels.map((m) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-            <option value="custom">Custom Path...</option>
-          </select>
-
-          {isCustomPath && (
-            <input
-              type="text"
-              name="model_path"
-              value={settings.model_path}
-              onChange={handleChange}
-              placeholder="C:/Absolute/Path/To/Model.gguf"
-              className="mt-2 w-full bg-[#0c0a09] border border-[#292524] rounded-sm px-5 py-4 focus:outline-none focus:border-[#57534e] transition-all placeholder-[#44403c] text-[#d6d3d1] font-mono text-sm"
-            />
-          )}
-          <div className="flex justify-between text-xs text-[#57534e]">
-            <span>
-              Models found in ~/.ucai/models: {availableModels.length}
-            </span>
-            <button
-              onClick={fetchModels}
-              className="text-[#78716c] hover:text-[#a8a29e]"
-            >
-              Refresh List
-            </button>
-          </div>
-        </div>
-
-        {/* Parameters Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="space-y-3">
-            <label className="block text-xs font-semibold uppercase tracking-widest text-[#78716c]">
-              Context Window
-            </label>
-            <input
-              type="number"
-              name="n_ctx"
-              value={settings.n_ctx}
-              onChange={handleChange}
-              className="w-full bg-[#0c0a09] border border-[#292524] rounded-sm px-5 py-4 focus:outline-none focus:border-[#57534e] text-[#d6d3d1]"
-            />
-          </div>
-          <div className="space-y-3">
-            <label className="block text-xs font-semibold uppercase tracking-widest text-[#78716c]">
-              GPU Layers
-            </label>
-            <input
-              type="number"
-              name="n_gpu_layers"
-              value={settings.n_gpu_layers}
-              onChange={handleChange}
-              className="w-full bg-[#0c0a09] border border-[#292524] rounded-sm px-5 py-4 focus:outline-none focus:border-[#57534e] text-[#d6d3d1]"
-            />
-          </div>
-        </div>
-
-        <div className="flex items-center space-x-3 pt-2">
-          <input
-            type="checkbox"
-            name="verbose"
-            checked={settings.verbose}
-            onChange={handleChange}
-            className="w-4 h-4 rounded-sm border-[#44403c] bg-[#0c0a09] text-[#78716c] focus:ring-0 focus:ring-offset-0"
-          />
-          <label className="text-sm text-[#a8a29e] tracking-wide">
-            Enable Verbose Logging
-          </label>
-        </div>
-
-        {/* load Button */}
-        <div className="pt-4">
-          <button
-            onClick={handleSave}
-            disabled={loading}
-            className={`w-full py-4 rounded-sm font-semibold text-sm tracking-widest uppercase transition-all ${
-              loading
-                ? "bg-[#292524] text-[#57534e] cursor-not-allowed"
-                : "bg-[#44403c] text-[#d6d3d1] hover:bg-[#57534e] hover:text-[#f5f5f4]"
-            }`}
-          >
-            {loading ? "Initializing..." : "Load Model Engine"}
-          </button>
-        </div>
-        {msg && (
-          <div
-            className={`p-4 rounded-sm text-center text-sm font-medium tracking-wide ${msg.includes("Error") || msg.includes("Failed") ? "text-red-400 bg-red-900/10 border border-red-900/20" : "text-[#78716c] bg-[#292524] border border-[#44403c]"}`}
-          >
-            {msg}
-          </div>
-        )}
+    <div className="min-h-screen bg-[#0c0a09] text-[#e7e5e4] font-sans selection:bg-[#a8a29e] selection:text-[#0c0a09] relative overflow-hidden">
+      {/* Background Gradients */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-[-20%] right-[-10%] w-[50%] h-[50%] bg-[#292524]/20 rounded-full blur-[120px]"></div>
+        <div className="absolute bottom-[-20%] left-[-10%] w-[50%] h-[50%] bg-[#44403c]/10 rounded-full blur-[120px]"></div>
       </div>
 
-      {/* RIGHT COLUMN: DOWNLOAD MANAGER */}
-      <div className="w-full md:w-1/3 space-y-8 border-l border-[#292524] pl-0 md:pl-8">
-        <div className="mb-6 border-b border-[#292524] pb-4">
-          <h2 className="text-xl font-light text-[#d6d3d1] tracking-wider mb-2">
-            Download Models
-          </h2>
-          <p className="text-[#78716c] text-sm">
-            Fetch new GGUF models from Hugging Face.
-          </p>
+      <div className="max-w-5xl mx-auto p-6 relative z-10">
+        <div className="flex items-center gap-4 mb-10">
+          <a
+            href="/chat"
+            className="p-2 rounded-full hover:bg-[#1c1917] text-[#78716c] hover:text-[#d6d3d1] transition-colors"
+          >
+            <ArrowLeft size={24} />
+          </a>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#e7e5e4] to-[#a8a29e]">
+              Settings
+            </h1>
+            <p className="text-[#78716c] text-sm mt-1">
+              Configure your local AI environment
+            </p>
+          </div>
         </div>
 
-        <div className="space-y-4">
-          <div className="p-4 bg-[#292524]/30 rounded-sm border border-[#44403c]">
-            <h3 className="text-[#a8a29e] text-xs font-bold uppercase tracking-widest mb-3">
-              Quick Presets
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() =>
-                  loadPreset(
-                    "TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF",
-                    "tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
-                  )
-                }
-                className="px-3 py-2 bg-[#1c1917] border border-[#44403c] text-[#d6d3d1] text-xs hover:border-[#78716c]"
-              >
-                TinyLlama (1.1B)
-              </button>
-              <button
-                onClick={() =>
-                  loadPreset(
-                    "TheBloke/Mistral-7B-Instruct-v0.2-GGUF",
-                    "mistral-7b-instruct-v0.2.Q4_K_M.gguf",
-                  )
-                }
-                className="px-3 py-2 bg-[#1c1917] border border-[#44403c] text-[#d6d3d1] text-xs hover:border-[#78716c]"
-              >
-                Mistral (7B)
-              </button>
-              <button
-                onClick={() =>
-                  loadPreset(
-                    "TheBloke/Llama-2-7B-Chat-GGUF",
-                    "llama-2-7b-chat.Q4_K_M.gguf",
-                  )
-                }
-                className="px-3 py-2 bg-[#1c1917] border border-[#44403c] text-[#d6d3d1] text-xs hover:border-[#78716c]"
-              >
-                Llama 2 (7B)
-              </button>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <label className="block text-xs font-semibold uppercase tracking-widest text-[#78716c]">
-              Repo ID
-            </label>
-            <input
-              type="text"
-              value={downloadRepo}
-              onChange={(e) => setDownloadRepo(e.target.value)}
-              placeholder="TheBloke/Mistral-7B..."
-              className="w-full bg-[#0c0a09] border border-[#292524] rounded-sm px-4 py-3 focus:outline-none focus:border-[#57534e] text-[#d6d3d1] text-sm"
-            />
-          </div>
-          <div className="space-y-3">
-            <label className="block text-xs font-semibold uppercase tracking-widest text-[#78716c]">
-              Filename
-            </label>
-            <input
-              type="text"
-              value={downloadFile}
-              onChange={(e) => setDownloadFile(e.target.value)}
-              placeholder="model.Q4_K_M.gguf"
-              className="w-full bg-[#0c0a09] border border-[#292524] rounded-sm px-4 py-3 focus:outline-none focus:border-[#57534e] text-[#d6d3d1] text-sm"
-            />
-          </div>
-
-          <button
-            onClick={handleDownload}
-            disabled={!!downloadTaskId}
-            className={`w-full py-3 rounded-sm font-semibold text-sm tracking-widest uppercase transition-all ${
-              downloadTaskId
-                ? "bg-[#292524] text-[#57534e] cursor-not-allowed"
-                : "bg-[#44403c] text-[#d6d3d1] hover:bg-[#57534e]"
-            }`}
-          >
-            {downloadTaskId ? "Downloading..." : "Start Download"}
-          </button>
-
-          {downloadStatus && (
-            <div className="mt-4 p-4 bg-[#0c0a09] border border-[#292524] rounded-sm">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-[#a8a29e] text-xs uppercase">Status</span>
-                <span
-                  className={`text-xs font-bold uppercase ${downloadStatus.status === "failed" ? "text-red-400" : "text-[#d6d3d1]"}`}
-                >
-                  {downloadStatus.status}
-                </span>
+        <div className="space-y-8">
+          {/* Model Management Section */}
+          <section className="bg-[#1c1917]/50 backdrop-blur-md border border-[#292524] rounded-2xl p-6 shadow-xl transition-all hover:border-[#44403c]">
+            <div className="flex items-center gap-3 mb-6 border-b border-[#292524] pb-4">
+              <div className="p-2 bg-[#292524] rounded-lg text-[#d6d3d1]">
+                <Cpu size={20} />
               </div>
-              <p className="text-xs text-[#57534e] truncate mb-2">
-                {downloadStatus.filename}
-              </p>
-              {downloadStatus.status === "downloading" && (
-                <div className="w-full bg-[#292524] h-1 rounded-full overflow-hidden">
-                  <div className="bg-[#a8a29e] h-full animate-pulse w-full"></div>
+              <h2 className="text-xl font-semibold text-[#d6d3d1]">
+                Model Management
+              </h2>
+            </div>
+
+            <div className="space-y-6">
+              {/* Current Model */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[#a8a29e] uppercase tracking-wide">
+                    Current Model Path
+                  </label>
+                  <div className="flex gap-2">
+                    <select
+                      value={isCustomPath ? "custom" : settings.model_path}
+                      onChange={handleModelSelect}
+                      className="flex-1 bg-[#0c0a09] border border-[#292524] rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#57534e] transition-colors text-[#d6d3d1] appearance-none"
+                    >
+                      <option value="" disabled>
+                        -- Select a Model --
+                      </option>
+                      {availableModels.map((m) => (
+                        <option key={m} value={m}>
+                          {m}
+                        </option>
+                      ))}
+                      <option value="custom">Custom Path...</option>
+                    </select>
+                  </div>
+                  {isCustomPath && (
+                    <input
+                      type="text"
+                      name="model_path"
+                      value={settings.model_path}
+                      onChange={handleChange}
+                      placeholder="C:/Absolute/Path/To/Model.gguf"
+                      className="mt-2 w-full bg-[#0c0a09] border border-[#292524] rounded-lg px-4 py-3 focus:outline-none focus:border-[#57534e] transition-all placeholder-[#44403c] text-[#d6d3d1] font-mono text-sm"
+                    />
+                  )}
+                  <p className="text-xs text-[#57534e] flex items-center gap-1 mt-1">
+                    <Info size={12} />
+                    Models found in ~/.ucai/models:{" "}
+                    <span className="text-[#d6d3d1]">
+                      {availableModels.length}
+                    </span>
+                    <button
+                      onClick={fetchModels}
+                      className="ml-2 text-[#78716c] hover:text-[#a8a29e] underline decoration-dotted"
+                    >
+                      Refresh
+                    </button>
+                  </p>
+                </div>
+
+                {/* Download Model */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[#a8a29e] uppercase tracking-wide">
+                    Download Model (HuggingFace)
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={downloadRepo}
+                      onChange={(e) => setDownloadRepo(e.target.value)}
+                      placeholder="user/repo-name"
+                      className="flex-1 bg-[#0c0a09] border border-[#292524] rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#57534e] transition-colors placeholder-[#44403c]"
+                    />
+                    <input
+                      type="text"
+                      value={downloadFile}
+                      onChange={(e) => setDownloadFile(e.target.value)}
+                      placeholder="model.gguf"
+                      className="w-1/3 bg-[#0c0a09] border border-[#292524] rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#57534e] transition-colors placeholder-[#44403c]"
+                    />
+                    <button
+                      onClick={handleDownload}
+                      disabled={!!downloadTaskId}
+                      className={`px-4 py-2 rounded-lg transition-colors border border-[#292524] flex items-center justify-center ${
+                        downloadTaskId
+                          ? "bg-[#292524] text-[#78716c] cursor-not-allowed"
+                          : "bg-[#1c1917] text-[#d6d3d1] hover:bg-[#292524] hover:text-[#e7e5e4]"
+                      }`}
+                    >
+                      <Download size={20} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Pre-sets */}
+              <div className="bg-[#292524]/30 rounded-lg p-4 border border-[#44403c]/50">
+                <p className="text-xs font-semibold uppercase tracking-widest text-[#78716c] mb-3">
+                  Quick Presets
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() =>
+                      loadPreset(
+                        "TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF",
+                        "tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+                      )
+                    }
+                    className="px-3 py-1.5 bg-[#1c1917] border border-[#44403c] text-[#d6d3d1] text-xs hover:border-[#78716c] rounded-md transition-colors"
+                  >
+                    TinyLlama (1.1B)
+                  </button>
+                  <button
+                    onClick={() =>
+                      loadPreset(
+                        "TheBloke/Mistral-7B-Instruct-v0.2-GGUF",
+                        "mistral-7b-instruct-v0.2.Q4_K_M.gguf",
+                      )
+                    }
+                    className="px-3 py-1.5 bg-[#1c1917] border border-[#44403c] text-[#d6d3d1] text-xs hover:border-[#78716c] rounded-md transition-colors"
+                  >
+                    Mistral (7B)
+                  </button>
+                </div>
+              </div>
+
+              {downloadStatus && (
+                <div className="bg-[#292524]/50 rounded-lg p-4 border border-[#44403c]/50 animate-in fade-in zoom-in duration-300">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-[#d6d3d1] flex items-center gap-2">
+                      {downloadStatus.status === "completed" ? (
+                        <CheckCircle size={16} className="text-green-500" />
+                      ) : (
+                        <Loader2
+                          size={16}
+                          className="animate-spin text-[#a8a29e]"
+                        />
+                      )}
+                      {downloadStatus.status === "completed"
+                        ? "Download Complete"
+                        : "Downloading..."}
+                    </span>
+                    <span className="text-xs text-[#a8a29e] font-mono">
+                      {downloadStatus.progress.toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-[#0c0a09] rounded-full h-2 overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-[#a8a29e] to-[#e7e5e4] h-2 rounded-full transition-all duration-300 ease-out"
+                      style={{ width: `${downloadStatus.progress}%` }}
+                    ></div>
+                  </div>
+                  {downloadStatus.error && (
+                    <p className="text-xs text-red-400 mt-2">
+                      {downloadStatus.error}
+                    </p>
+                  )}
                 </div>
               )}
-              {downloadStatus.error && (
-                <p className="text-xs text-red-400 mt-2">
-                  {downloadStatus.error}
-                </p>
-              )}
             </div>
-          )}
+          </section>
+
+          {/* Parameters Section */}
+          <section className="bg-[#1c1917]/50 backdrop-blur-md border border-[#292524] rounded-2xl p-6 shadow-xl transition-all hover:border-[#44403c]">
+            <div className="flex items-center gap-3 mb-6 border-b border-[#292524] pb-4">
+              <div className="p-2 bg-[#292524] rounded-lg text-[#d6d3d1]">
+                <SettingsIcon size={20} />
+              </div>
+              <h2 className="text-xl font-semibold text-[#d6d3d1]">
+                Inference Parameters
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-4">
+                <div className="flex justify-between">
+                  <label className="text-sm font-medium text-[#a8a29e]">
+                    Temperature
+                  </label>
+                  <span className="text-sm font-mono text-[#d6d3d1] bg-[#292524] px-2 rounded">
+                    {settings.verbose}
+                  </span>
+                </div>
+                {/* Note: Temperature slider logic was missing in state, assuming default for now or adding later. Keeping simple input. */}
+                <div className="p-4 bg-[#292524]/30 rounded text-xs text-[#78716c]">
+                  Advanced parameters are auto-configured by the selected model.
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-3 pt-2">
+                <input
+                  type="checkbox"
+                  name="verbose"
+                  checked={settings.verbose}
+                  onChange={handleChange}
+                  className="w-4 h-4 rounded-sm border-[#44403c] bg-[#0c0a09] text-[#78716c] focus:ring-0 focus:ring-offset-0 accent-[#a8a29e]"
+                />
+                <label className="text-sm text-[#a8a29e] tracking-wide">
+                  Enable Verbose Logging
+                </label>
+              </div>
+            </div>
+          </section>
+
+          {/* Memory Section */}
+          <section className="bg-[#1c1917]/50 backdrop-blur-md border border-[#292524] rounded-2xl p-6 shadow-xl transition-all hover:border-[#44403c]">
+            <div className="flex items-center gap-3 mb-6 border-b border-[#292524] pb-4">
+              <div className="p-2 bg-[#292524] rounded-lg text-[#d6d3d1]">
+                <Database size={20} />
+              </div>
+              <h2 className="text-xl font-semibold text-[#d6d3d1]">
+                Long Term Memory (RAG)
+              </h2>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <h3 className="text-base font-medium text-[#e7e5e4]">
+                  Enable Vector Memory
+                </h3>
+                <p className="text-xs text-[#78716c]">
+                  Allows the AI to remember past conversations using ChromaDB.
+                </p>
+              </div>
+              <button
+                onClick={() =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    rag_enabled: !prev.rag_enabled,
+                  }))
+                }
+                className="w-12 h-6 bg-[#292524] rounded-full relative transition-colors data-[state=on]:bg-green-600 shadow-inner"
+                data-state={settings.rag_enabled ? "on" : "off"}
+              >
+                <div className="w-4 h-4 bg-[#e7e5e4] rounded-full absolute top-1 left-1 transition-transform data-[state=on]:translate-x-6 shadow-sm"></div>
+              </button>
+            </div>
+          </section>
+
+          {/* System Prompt Section */}
+          <section className="bg-[#1c1917]/50 backdrop-blur-md border border-[#292524] rounded-2xl p-6 shadow-xl transition-all hover:border-[#44403c]">
+            <div className="flex items-center gap-3 mb-6 border-b border-[#292524] pb-4">
+              <div className="p-2 bg-[#292524] rounded-lg text-[#d6d3d1]">
+                <Terminal size={20} />
+              </div>
+              <h2 className="text-xl font-semibold text-[#d6d3d1]">
+                System Prompt
+              </h2>
+            </div>
+            <div className="space-y-4">
+              <p className="text-sm text-[#78716c]">
+                Define the AI's personality and instructions. This is injected
+                at the start of every conversation.
+              </p>
+              <textarea
+                name="system_prompt"
+                value={settings.system_prompt}
+                onChange={handleChange}
+                rows={6}
+                placeholder="You are a helpful AI assistant..."
+                className="w-full bg-[#0c0a09] border border-[#292524] rounded-lg p-4 focus:outline-none focus:border-[#57534e] text-[#d6d3d1] font-mono text-sm leading-relaxed resize-y"
+              />
+            </div>
+          </section>
+
+          <div className="flex justify-end pt-4 gap-4 items-center">
+            {msg && (
+              <span
+                className={`text-sm ${msg.includes("Error") ? "text-red-400" : "text-green-400"}`}
+              >
+                {msg}
+              </span>
+            )}
+            <button
+              onClick={handleSave}
+              disabled={loading}
+              className="flex items-center gap-2 px-8 py-3 bg-[#e7e5e4] text-[#0c0a09] rounded-full font-bold shadow-lg hover:bg-[#d6d3d1] hover:scale-105 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <Save size={18} />
+              )}
+              {loading ? "Saving..." : "Save Configuration"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

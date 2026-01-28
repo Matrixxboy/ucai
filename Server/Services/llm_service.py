@@ -18,10 +18,13 @@ class LLMService:
 
     def _load_settings(self):
         """Loads settings from disk."""
+        from Static.prompt import system_prompt as default_system_prompt
         self._config = {
             "n_ctx": 2048,
             "n_gpu_layers": 0, # Default to CPU
-            "verbose": True
+            "verbose": True,
+            "system_prompt": default_system_prompt,
+            "rag_enabled": True
         }
         if os.path.exists(SETTINGS_FILE):
             try:

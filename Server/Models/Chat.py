@@ -10,3 +10,4 @@ class ChatRequest(BaseModel):
     messages: List[ChatMessage]
     max_tokens: Optional[int] = 512
     temperature: Optional[float] = 0.7
+    web_search: Optional[bool] = False

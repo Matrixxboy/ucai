@@ -31,7 +31,9 @@ def update_settings(settings: SettingsUpdate):
             config={
                 "n_ctx": settings.n_ctx,
                 "n_gpu_layers": settings.n_gpu_layers,
-                "verbose": settings.verbose
+                "verbose": settings.verbose,
+                "system_prompt": settings.system_prompt,
+                "rag_enabled": settings.rag_enabled
             }
         )
         return make_response(
@@ -54,34 +56,37 @@ async def chat(request: ChatRequest):
         user_message = request.messages[-1].content
         context = memory_service.search_context(user_message)
         
-        system_prompt = "You are a helpful AI assistant."
-        if context:
-            context_str = "\n".join(context)
-            system_prompt += f"\n\nRelevant past information:\n{context_str}\n\nUse this information to answer the user if relevant."
-            print(f"RAG Context Injected: {len(context)} items")
-
-        # Convert Pydantic models to dicts for Llama
-        # Access system_prompt from global if needed, or from message if the user added it to the model (checked next)
-        
         formatted_messages = []
-        
+
         # 1. Inject System Prompt (Global)
-        # We start with the global system prompt
-        formatted_messages.append({"role": "system", "content": system_prompt})
+        current_system_prompt = llm_service._config.get("system_prompt", "You are a helpful AI assistant.")
+        rag_enabled = llm_service._config.get("rag_enabled", True)
+
+        # 0. Inject Context Tools (Time/Date)
+        from datetime import datetime
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        current_system_prompt += f"\n\nCurrent Date & Time: {current_time}"
+
+        # 0.1 Web Search Injection
+        if request.web_search:
+            from Utils.tools import search_web
+            # Simple keyword extraction: use the last user message
+            search_query = user_message
+            print(f"Searching web for: {search_query}...")
+            search_results = search_web(search_query)
+            current_system_prompt += f"\n\nWeb Search Results:\n{search_results}\n\nUse these results to answer the user's question with up-to-date information."
+
+        # RAG Injection
+        if rag_enabled and context:
+             context_str = "\n".join(context)
+             current_system_prompt += f"\n\nRelevant past information:\n{context_str}\n\nUse this information to answer the user if relevant."
+             print(f"RAG Context Injected: {len(context)} items")
+
+        formatted_messages.append({"role": "system", "content": current_system_prompt})
         
         # 2. Append User/Assistant Messages
         for m in request.messages:
              formatted_messages.append({"role": m.role, "content": m.content})
-
-        # 3. Retrieve Context (RAG) - Optional, we append it to the LAST user message or as a new system message
-        user_message = request.messages[-1].content
-        context = memory_service.search_context(user_message)
-        
-        if context:
-            context_str = "\n".join(context)
-            # We can append this to the system prompt (index 0) or inject it
-            formatted_messages[0]["content"] += f"\n\nRelevant past information:\n{context_str}"
-            print(f"RAG Context Injected: {len(context)} items")
 
         # 2. Generator Wrapper to Capture Response for Memory
         async def response_generator():

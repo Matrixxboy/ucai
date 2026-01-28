@@ -11,12 +11,16 @@ import {
   PinOff,
   Edit2,
   Check,
+  Globe,
+  Send,
 } from "lucide-react"
 import { api } from "../api/api"
+import CreditsModal from "../components/CreditsModal"
 
 interface Message {
   role: "user" | "assistant"
   content: string
+  timestamp: number
 }
 
 interface ChatSession {
@@ -34,10 +38,14 @@ export default function Chatpage() {
   const [sessions, setSessions] = useState<ChatSession[]>([])
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [showCredits, setShowCredits] = useState(false) // Credits State
 
   // Renaming state
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null)
   const [editName, setEditName] = useState("")
+
+  const [isWebSearchEnabled, setIsWebSearchEnabled] = useState(false)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -208,7 +216,11 @@ export default function Chatpage() {
   const sendMessage = async () => {
     if (!input.trim() || loading) return
 
-    const userMsg: Message = { role: "user", content: input }
+    const userMsg: Message = {
+      role: "user",
+      content: input,
+      timestamp: Date.now(),
+    }
     const updatedMessages = [...messages, userMsg]
     setMessages(updatedMessages)
     updateSessionMessages(updatedMessages)
@@ -219,12 +231,17 @@ export default function Chatpage() {
     // Add placeholder for assistant
     const placeholderMsgs = [
       ...updatedMessages,
-      { role: "assistant", content: "" } as Message,
+      { role: "assistant", content: "", timestamp: Date.now() } as Message,
     ]
     setMessages(placeholderMsgs)
 
+    // Reset height
+    if (inputRef.current) {
+      inputRef.current.style.height = "auto"
+    }
+
     try {
-      const res = await api.chat(updatedMessages, 2048, 0.7)
+      const res = await api.chat(updatedMessages, 2048, 0.7, isWebSearchEnabled)
 
       if (!res.body) throw new Error("No response body")
 
@@ -245,6 +262,7 @@ export default function Chatpage() {
           newMsgs[newMsgs.length - 1] = {
             role: "assistant",
             content: assistantMsg,
+            timestamp: Date.now(),
           }
           return newMsgs
         })
@@ -252,7 +270,7 @@ export default function Chatpage() {
       // Update session storage after complete response
       updateSessionMessages([
         ...updatedMessages,
-        { role: "assistant", content: assistantMsg },
+        { role: "assistant", content: assistantMsg, timestamp: Date.now() },
       ])
     } catch (error) {
       console.error("Chat error:", error)
@@ -262,6 +280,7 @@ export default function Chatpage() {
           role: "assistant",
           content:
             "Error: Failed to connect to local model. Please ensure the server is running and a model is loaded in Settings.",
+          timestamp: Date.now(),
         }
         return newMsgs
       })
@@ -272,6 +291,11 @@ export default function Chatpage() {
 
   return (
     <div className="flex h-screen bg-[#1c1917] text-[#e7e5e4] overflow-hidden">
+      <CreditsModal
+        isOpen={showCredits}
+        onClose={() => setShowCredits(false)}
+      />
+
       {/* Sidebar - Mobile Toggle overlay */}
       {isSidebarOpen && (
         <div
@@ -344,7 +368,11 @@ export default function Chatpage() {
                         {session.name}
                       </p>
                       <p className="text-xs text-[#78716c] mt-0.5">
-                        {new Date(session.timestamp).toLocaleDateString()}
+                        {new Date(session.timestamp).toLocaleDateString()}{" "}
+                        {new Date(session.timestamp).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </p>
                     </div>
                   )}
@@ -389,12 +417,25 @@ export default function Chatpage() {
             </div>
           )}
         </div>
+
+        {/* Sidebar Footer */}
+        <div className="p-4 border-t border-[#292524]">
+          <div className="text-center">
+            <p className="text-[10px] text-[#57534e] uppercase tracking-widest">
+              v1.0.0 Local
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col h-full w-full">
+      <div className="flex-1 flex flex-col h-full w-full relative">
+        {/* Subtle Background Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#1c1917] via-[#1c1917] to-[#0c0a09] pointer-events-none -z-10"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#292524]/20 via-transparent to-transparent pointer-events-none -z-10"></div>
+
         {/* Header */}
-        <div className="p-4 border-b border-[#292524] bg-[#1c1917]/95 backdrop-blur-sm flex justify-between items-center z-10">
+        <div className="p-4 border-b border-[#292524]/50 bg-[#1c1917]/80 backdrop-blur-md flex justify-between items-center z-20 sticky top-0">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -402,24 +443,35 @@ export default function Chatpage() {
             >
               <Menu size={24} />
             </button>
-            <h1 className="text-xl font-medium text-[#d6d3d1] tracking-wide">
-              UCAI <span className="text-[#a8a29e]">Local Chat</span>
+            <h1 className="text-xl font-light text-[#d6d3d1] tracking-wide">
+              UCAI <span className="text-[#57534e] font-thin">|</span>{" "}
+              <span className="text-[#a8a29e] text-sm uppercase tracking-widest font-bold">
+                Local Intelligence
+              </span>
             </h1>
           </div>
-          <a
-            href="/settings"
-            className="text-sm text-[#78716c] hover:text-[#d6d3d1] transition-colors uppercase tracking-wider text-xs font-semibold"
-          >
-            Settings
-          </a>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowCredits(true)}
+              className="px-4 py-2 rounded-full border border-[#292524] text-[#a8a29e] hover:text-[#d6d3d1] hover:bg-[#292524] transition-all text-xs uppercase tracking-widest font-bold"
+            >
+              Credits
+            </button>
+            <a
+              href="/settings"
+              className="px-4 py-2 rounded-full border border-[#292524] text-[#a8a29e] hover:text-[#d6d3d1] hover:bg-[#292524] transition-all text-xs uppercase tracking-widest font-bold"
+            >
+              Settings
+            </a>
+          </div>
         </div>
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full text-[#57534e] space-y-4">
-              <div className="w-16 h-16 rounded-full bg-[#292524] flex items-center justify-center text-3xl opacity-80">
-                ☕
+              <div className="w-16 h-16 rounded-full bg-[#292524] flex items-center justify-center text-[#78716c] opacity-80">
+                <MessageSquare size={32} />
               </div>
               <p className="text-lg font-light tracking-wide">
                 Ready to chat with your local model.
@@ -444,12 +496,30 @@ export default function Chatpage() {
                     {msg.content}
                   </p>
                 ) : (
-                  <div className="prose prose-invert prose-stone max-w-none text-sm md:text-base font-light leading-relaxed">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {msg.content}
-                    </ReactMarkdown>
+                  <div className="prose prose-invert prose-stone max-w-none text-sm md:text-base font-light leading-relaxed min-h-[24px]">
+                    {msg.content ? (
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {msg.content}
+                      </ReactMarkdown>
+                    ) : (
+                      <div className="flex items-center gap-1.5 h-full py-1">
+                        <span className="w-2 h-2 bg-[#78716c] rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                        <span className="w-2 h-2 bg-[#78716c] rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                        <span className="w-2 h-2 bg-[#78716c] rounded-full animate-bounce"></span>
+                      </div>
+                    )}
                   </div>
                 )}
+                <div
+                  className={`text-[10px] mt-2 opacity-50 ${msg.role === "user" ? "text-right" : "text-left"}`}
+                >
+                  {msg.timestamp
+                    ? new Date(msg.timestamp).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                    : ""}
+                </div>
               </div>
             </div>
           ))}
@@ -457,42 +527,73 @@ export default function Chatpage() {
         </div>
 
         {/* Input */}
-        <div className="p-4 bg-[#1c1917] border-t border-[#292524]">
-          <div className="max-w-4xl mx-auto relative">
+        <div className="p-4 md:p-6 bg-gradient-to-t from-[#0c0a09] to-transparent z-10 w-full max-w-4xl mx-auto">
+          <div className="relative bg-[#1c1917]/80 backdrop-blur-xl border border-[#292524] rounded-2xl shadow-2xl flex items-end gap-2 p-2 transition-all focus-within:border-[#44403c] focus-within:ring-1 focus-within:ring-[#292524]">
+            {/* Web Search Toggle */}
+            <button
+              onClick={() => setIsWebSearchEnabled(!isWebSearchEnabled)}
+              className={`p-3 rounded-xl transition-all duration-300 flex-shrink-0 group relative overflow-hidden ${
+                isWebSearchEnabled
+                  ? "bg-blue-500/10 text-blue-400"
+                  : "text-[#78716c] hover:bg-[#292524] hover:text-[#d6d3d1]"
+              }`}
+              title={
+                isWebSearchEnabled ? "Web Search Active" : "Enable Web Search"
+              }
+            >
+              <Globe
+                size={20}
+                className={isWebSearchEnabled ? "animate-pulse" : ""}
+              />
+              {isWebSearchEnabled && (
+                <span className="absolute inset-0 rounded-xl ring-1 ring-inset ring-blue-500/20"></span>
+              )}
+            </button>
+
             <textarea
+              ref={inputRef}
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => {
+                setInput(e.target.value)
+                e.target.style.height = "auto"
+                e.target.style.height = `${Math.min(e.target.scrollHeight, 150)}px`
+              }}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault()
                   sendMessage()
                 }
               }}
-              placeholder="Type a message..."
+              placeholder={
+                isWebSearchEnabled
+                  ? "Ask anything from the web..."
+                  : "Type a message..."
+              }
               disabled={loading}
               rows={1}
-              className="w-full bg-[#0c0a09] border border-[#292524] text-[#e7e5e4] rounded-sm py-4 pl-6 pr-14 focus:outline-none focus:border-[#57534e] transition-colors placeholder-[#44403c] font-light resize-none overflow-hidden"
-              style={{ minHeight: "60px" }}
+              className="w-full bg-transparent border-none text-[#e7e5e4] py-3 px-2 focus:ring-0 placeholder-[#57534e] font-light resize-none max-h-[150px] overflow-y-auto leading-relaxed scrollbar-thin scrollbar-thumb-[#292524] scrollbar-track-transparent"
+              style={{ minHeight: "48px" }}
             />
+
             <button
               onClick={sendMessage}
               disabled={loading || !input.trim()}
-              className="absolute right-3 top-3 p-2 text-[#78716c] hover:text-[#d6d3d1] disabled:opacity-30 disabled:hover:text-[#78716c] transition-colors"
+              className="p-3 bg-[#e7e5e4] text-[#0c0a09] rounded-xl hover:bg-[#d6d3d1] hover:scale-105 active:scale-95 disabled:opacity-50 disabled:scale-100 disabled:hover:bg-[#e7e5e4] transition-all duration-200 flex-shrink-0 shadow-lg shadow-[#e7e5e4]/5"
             >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                />
-              </svg>
+              {loading ? (
+                <div className="w-5 h-5 border-2 border-[#0c0a09]/30 border-t-[#0c0a09] rounded-full animate-spin" />
+              ) : (
+                <Send size={20} />
+              )}
             </button>
+          </div>
+          <div className="text-center mt-3">
+            <p className="text-[10px] text-[#57534e] font-medium tracking-widest uppercase">
+              {isWebSearchEnabled
+                ? "Searching the internet • "
+                : "Local Inference • "}{" "}
+              Private & Secure
+            </p>
           </div>
         </div>
       </div>

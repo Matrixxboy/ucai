@@ -2,11 +2,16 @@ const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8000/api"
 
 export const api = {
   // Chat
-  chat: async (messages: any[], max_tokens = 2048, temperature = 0.7) => {
+  chat: async (
+    messages: any[],
+    max_tokens = 2048,
+    temperature = 0.7,
+    web_search = false,
+  ) => {
     return fetch(`${API_BASE}/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages, max_tokens, temperature }),
+      body: JSON.stringify({ messages, max_tokens, temperature, web_search }),
     })
   },
 
