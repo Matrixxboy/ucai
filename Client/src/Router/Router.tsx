@@ -17,6 +17,14 @@ const router = createBrowserRouter([
     path: "/settings",
     element: <Settings />,
   },
+  {
+    path: "*",
+    element: (
+      <div className="text-white p-10">
+        404 - Not Found. Current Path: {window.location.pathname}
+      </div>
+    ),
+  },
 ])
 
 export default router
